@@ -1,0 +1,25 @@
+User
+    ident Text
+    password Text Maybe
+    UniqueUser ident
+    deriving Typeable
+Email
+    email Text
+    user UserId Maybe
+    verkey Text Maybe
+    UniqueEmail email
+
+BlogPost
+    title Text
+    text Html
+    date UTCTime
+Tag
+    blogpost BlogPostId
+    title Text
+Comment
+    blogpost BlogPostId
+    title Text
+    text Html
+    date UTCTime
+
+ -- By default this file is used in Model.hs (which is imported by Foundation.hs)

@@ -1,0 +1,12 @@
+/static StaticR Static appStatic
+/auth   AuthR   Auth   getAuth
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
+
+/ HomeR GET POST
+/blog/site/#Int BlogR GET
+/blog/blogpost/#BlogPostId BlogPostR GET POST
+/blog/addpost AddPostR GET POST
+/blog/settings SettingsR GET POST
+
