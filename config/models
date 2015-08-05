@@ -12,7 +12,12 @@ Email
 BlogPost
     title Text
     text Html
+    deriving
     date UTCTime
+--BlogPost
+--    title Text
+--    text Text
+--    date Int
 Tag
     blogpost BlogPostId
     title Text
