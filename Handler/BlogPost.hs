@@ -27,7 +27,7 @@ getBlogPostR bPostId = do
                                    <button>Settings
                            <h1>#{blogPostTitle bPost}
                            posted: #{show $ blogPostDate bPost}
-                           <article class=post>
+                           <article class=fullpost>
                              #{blogPostText bPost}
                            <h2>Comments
                            <article class=comment>
@@ -40,13 +40,13 @@ getBlogPostR bPostId = do
                            $if null comments
                              No comments added yet.
                            $else
-                             $forall Entity commentId (Comment bPost title text date) <- comments
+                             $forall Entity commentId (Comment bPost author title text date) <- comments
                                <article class=comment>
                                  <header>
                                    <h3>#{title}
                                  #{text}
                                  <footer>
-                                   posted: #{show date}
+                                   commented: #{show date} by #{author}
 
                            <hr>
                          |]
@@ -71,6 +71,7 @@ postBlogPostR bPostId = do
 commentForm :: BlogPostId -> Form Comment
 commentForm postId= renderDivs $ Comment
     <$> pure postId
+    <*> areq textField "Author: " (Just "FlotteBiene42")
     <*> areq textField "Title: " Nothing
     <*> areq nicHtmlField "Text: " Nothing
     <*> lift (liftIO getCurrentTime)

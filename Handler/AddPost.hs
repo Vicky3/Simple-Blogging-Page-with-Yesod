@@ -31,7 +31,7 @@ postAddPostR = do
                  case res of
                    FormSuccess bPost -> do
                      bPostId <- runDB $ insert bPost
-                     redirect $ BlogR 1
+                     redirect $ BlogPostR bPostId
                    _ -> defaultLayout $ [whamlet|
                    <h1>Sorry, something went wrong!
                    <table>

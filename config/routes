@@ -5,7 +5,7 @@
 /robots.txt RobotsR GET
 
 / HomeR GET POST
-/blog/site/#Int BlogR GET
+/blog/site/#Int BlogR GET POST
 /blog/blogpost/#BlogPostId BlogPostR GET POST
 /blog/addpost AddPostR GET POST
 /blog/settings SettingsR GET POST

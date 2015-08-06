@@ -19,6 +19,7 @@ Tag
     title Text
 Comment
     blogpost BlogPostId
+    author Text
     title Text
     text Html
     date UTCTime
