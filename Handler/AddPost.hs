@@ -7,12 +7,19 @@ instance YesodNic App
 
 getAddPostR :: Handler Html
 getAddPostR = do
-                (bPostWidget, theEnctype) <- generateFormPost aForm
+                (bPostWidget, theEnctype) <- generateFormPost bPostForm
                 defaultLayout $ [whamlet|
                   <h1>Add a new post
-                  <form method=get action=@{BlogR 1}><button>Return</button></form>    <form method=get action=@{SettingsR}><button>Settings</button></form>
-                  <form method=post action=@{AddPostR} enctype=#{theEnctype}>
-                    <noscript>To get a nice editor, please enable JavaScript!
+                  <table>
+                      <tr>
+                        <td>
+                          <form method=get action=@{BlogR 1}>
+                            <button>Return
+                        <td>
+                          <form method=get action=@{SettingsR}><button>Settings
+                  <form method=post enctype=#{theEnctype}>
+                    <noscript>
+                      <b>To get a nice editor, please enable JavaScript!
                     ^{bPostWidget}
                     <button>Submit!
                   <hr>
@@ -20,19 +27,24 @@ getAddPostR = do
 
 postAddPostR :: Handler Html
 postAddPostR = do
-                 ((res,bPostWidget),theEnctype) <- runFormPost aForm
+                 ((res,bPostWidget),theEnctype) <- runFormPost bPostForm
                  case res of
                    FormSuccess bPost -> do
                      bPostId <- runDB $ insert bPost
                      redirect $ BlogR 1
                    _ -> defaultLayout $ [whamlet|
                    <h1>Sorry, something went wrong!
-                   <form method=get action=@{AddPostR}><button>Try again</button></form>    <form method=get action=@{BlogR 1}><button>Return to main page</button></form>
+                   <table>
+                      <tr>
+                        <td>
+                          <form method=get><button>Try again
+                        <td>
+                          <form method=get action=@{BlogR 1}><button>Return to main page
                    |]
                  
 
-aForm :: Form BlogPost
-aForm = renderDivs $ BlogPost
+bPostForm :: Form BlogPost
+bPostForm = renderDivs $ BlogPost
     <$> areq textField "Title: " Nothing
     <*> areq nicHtmlField "Text: " Nothing
     <*> lift (liftIO getCurrentTime)
