@@ -10,12 +10,18 @@ getBlogPostR bPostId = do
                          bPost <- runDB $ get404 bPostId
                          comments <- runDB $ selectList [CommentBlogpost ==. bPostId] [Desc CommentDate]
                          (commentWidget, theEnctype) <- generateFormPost (commentForm bPostId)
+                         maid <- maybeAuthId
                          defaultLayout $ [whamlet|
                            <h2>Post No. #{toPathPiece bPostId}
                            <table>
                              <tr>
                                <td>
-                                 <button>Login
+                                 $maybe _ <- maid
+                                   <form method=get action=@{AuthR LogoutR}>
+                                     <button>Logout
+                                 $nothing
+                                   <form method=get action=@{AuthR LoginR}>
+                                     <button>Login
                                <td>
                                  <form method=get action=@{BlogR 1}>
                                    <button>Home
@@ -40,7 +46,7 @@ getBlogPostR bPostId = do
                            $if null comments
                              No comments added yet.
                            $else
-                             $forall Entity commentId (Comment bPost author title text date) <- comments
+                             $forall Entity _ (Comment _ author title text date) <- comments
                                <article class=comment>
                                  <header>
                                    <h3>#{title}
@@ -53,10 +59,11 @@ getBlogPostR bPostId = do
 
 postBlogPostR :: BlogPostId -> Handler Html
 postBlogPostR bPostId = do
-                          ((res,commentWidget),theEnctype) <- runFormPost (commentForm bPostId)
+                          ((res,_),_) <- runFormPost (commentForm bPostId)
                           case res of
                             FormSuccess comment -> do
-                              commentId <- runDB $ insert comment
+                              _ <- runDB $ insert comment
+                              setMessage $ toHtml $ (commentTitle comment) <> " successfully created"
                               redirect $ BlogPostR bPostId
                             _ -> defaultLayout $ [whamlet|
                             <h1>Sorry, something went wrong!

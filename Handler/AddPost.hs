@@ -14,9 +14,10 @@ getAddPostR = do
                       <tr>
                         <td>
                           <form method=get action=@{BlogR 1}>
-                            <button>Return
+                            <button>Home
                         <td>
-                          <form method=get action=@{SettingsR}><button>Settings
+                          <form method=get action=@{SettingsR}>
+                            <button>Settings
                   <form method=post enctype=#{theEnctype}>
                     <noscript>
                       <b>To get a nice editor, please enable JavaScript!
@@ -27,17 +28,18 @@ getAddPostR = do
 
 postAddPostR :: Handler Html
 postAddPostR = do
-                 ((res,bPostWidget),theEnctype) <- runFormPost bPostForm
+                 ((res,_),_) <- runFormPost bPostForm
                  case res of
                    FormSuccess bPost -> do
                      bPostId <- runDB $ insert bPost
+                     setMessage $ toHtml $ (blogPostTitle bPost) <> " successfully created"
                      redirect $ BlogPostR bPostId
                    _ -> defaultLayout $ [whamlet|
                    <h1>Sorry, something went wrong!
                    <table>
                       <tr>
                         <td>
-                          <form method=get><button>Try again
+                          <form method=get><button>Go back
                         <td>
                           <form method=get action=@{BlogR 1}><button>Return to main page
                    |]

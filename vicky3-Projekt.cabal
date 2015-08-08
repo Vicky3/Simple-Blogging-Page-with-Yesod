@@ -26,6 +26,9 @@ library
                      Handler.BlogPost
                      Handler.AddPost
                      Handler.Settings
+                     Handler.AddAdmin
+                     Handler.UserEdit
+                     Handler.UserDelete
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

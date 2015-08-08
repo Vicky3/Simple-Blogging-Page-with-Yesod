@@ -79,6 +79,33 @@ instance Yesod App where
     isAuthorized (AuthR _) _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
+
+    isAuthorized (AddPostR) _ = do
+        mauth <- maybeAuth
+        case mauth of
+            Nothing -> return AuthenticationRequired
+            Just _  -> return Authorized
+    isAuthorized (SettingsR) _ = do
+        mauth <- maybeAuth
+        case mauth of
+            Nothing -> return AuthenticationRequired
+            Just (Entity _ user)
+                | userAdmin user -> return Authorized
+                | otherwise    -> return $ Unauthorized "You must be an admin for this!"
+    isAuthorized (UserEditR _) _ = do
+        mauth <- maybeAuth
+        case mauth of
+            Nothing -> return AuthenticationRequired
+            Just (Entity _ user)
+                | userAdmin user -> return Authorized
+                | otherwise    -> return $ Unauthorized "You must be an admin for this!"
+    isAuthorized (UserDeleteR _) _ = do
+        mauth <- maybeAuth
+        case mauth of
+            Nothing -> return AuthenticationRequired
+            Just (Entity _ user)
+                | userAdmin user -> return Authorized
+                | otherwise    -> return $ Unauthorized "You must be an admin for this!"
     -- Default to Authorized for now.
     isAuthorized _ _ = return Authorized
 

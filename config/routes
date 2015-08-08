@@ -9,4 +9,6 @@
 /blog/blogpost/#BlogPostId BlogPostR GET POST
 /blog/addpost AddPostR GET POST
 /blog/settings SettingsR GET POST
-
+/addAdmin AddAdminR GET POST
+/blog/editUser/#UserId UserEditR GET POST
+/blog/deleteUser/#UserId UserDeleteR GET POST

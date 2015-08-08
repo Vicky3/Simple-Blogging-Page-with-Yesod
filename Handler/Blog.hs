@@ -2,22 +2,23 @@ module Handler.Blog where
 
 import Import
 
-import           Data.Text (Text)
-import qualified Data.Text as T
-
 import Text.Blaze.Html.Renderer.String (renderHtml)
 
 getBlogR :: Int -> Handler Html
 getBlogR site = do
                   let postsPerSite = 3
 
-                  when (site < 1) $ redirect $ BlogR 1
+                  when (site < 1) $ do
+                                      setMessage $ toHtml $ (show site) <> " is no valid site."
+                                      redirect $ BlogR 1
                   allPosts <- runDB $ selectList [] [Desc BlogPostDate]
                   let numPosts = length(allPosts)
                   let numPages = if (mod numPosts postsPerSite) > 0
                                    then (quot numPosts postsPerSite) + 1
                                    else quot numPosts postsPerSite
-                  when ((site > numPages) && (site /= 1)) $ redirect $ BlogR numPages
+                  when ((site > numPages) && (site /= 1)) $ do
+                                                              setMessage $ toHtml $ (show site) <> " is no valid site."
+                                                              redirect $ BlogR numPages
 
                   let previousPage = site-1
                   let nextPage = site+1
@@ -26,6 +27,7 @@ getBlogR site = do
                   let firstPost = postsPerSite*(site-1)+1
                   let lastPost = firstPost+length(posts)-1
 
+                  maid <- maybeAuthId
                   (searchWidget, theEnctype) <- generateFormPost searchForm
 
                   defaultLayout $ [whamlet|
@@ -33,7 +35,12 @@ getBlogR site = do
                     <table>
                       <tr>
                         <td>
-                          <button>Login
+                          $maybe _ <- maid
+                            <form method=get action=@{AuthR LogoutR}>
+                              <button>Logout
+                          $nothing
+                            <form method=get action=@{AuthR LoginR}>
+                              <button>Login
                         <td>
                           <form method=get action=@{AddPostR}>
                             <button>New Post
@@ -81,7 +88,7 @@ getBlogR site = do
                     $if null comments
                       No Comments! :(
                     $else
-                      $forall Entity commentId (Comment bPost author title text date) <- comments
+                      $forall Entity _ (Comment bPost author title text date) <- comments
                         <article class=comment>
                           <header>
                             <h3><a href=@{BlogPostR bPost}>#{title}</a>
@@ -94,18 +101,25 @@ getBlogR site = do
 
 postBlogR :: Int -> Handler Html
 postBlogR site = do
-                   ((res,bPostWidget),theEnctype) <- runFormPost searchForm
+                   ((res,_),_) <- runFormPost searchForm
                    case res of
                      FormSuccess s -> do
                        posts <- runDB $ selectList [] [Desc BlogPostDate]
                        let hitTitle = [ x | x <- posts, (Entity _ (BlogPost y _ _)) <- [x], isInfixOf s y]
                        let hitText = [ x | x <- posts, (Entity _ (BlogPost _ y _)) <- [x], isInfixOf s (pack $ renderHtml y)]
+
+                       maid <- maybeAuthId
                        defaultLayout $ [whamlet|
                          <h1>Results:
                          <table>
                           <tr>
                             <td>
-                              <button>Login
+                              $maybe _ <- maid
+                                <form method=get action=@{AuthR LogoutR}>
+                                  <button>Logout
+                              $nothing
+                                <form method=get action=@{AuthR LoginR}>
+                                  <button>Login
                             <td>
                               <form method=get action=@{BlogR 1}>
                                 <button>Home
@@ -123,7 +137,7 @@ postBlogR site = do
                            $forall Entity postId (BlogPost title text date) <- hitTitle
                              <article class=post>
                                <header>
-                               <h3><a href=@{BlogPostR postId}>#{title}</a>
+                                 <h3><a href=@{BlogPostR postId}>#{title}</a>
                                #{text}
                                <footer>
                                  posted #{show date}
@@ -134,7 +148,7 @@ postBlogR site = do
                            $forall Entity postId (BlogPost title text date) <- hitText
                              <article class=post>
                                <header>
-                               <h3><a href=@{BlogPostR postId}>#{title}</a>
+                                 <h3><a href=@{BlogPostR postId}>#{title}</a>
                                #{text}
                                <footer>
                                  posted #{show date}
@@ -147,5 +161,5 @@ postBlogR site = do
                        <hr>
                      |]
 
-searchForm :: Form T.Text
+searchForm :: Form Text
 searchForm = renderDivs $ areq textField "Search a word: " Nothing

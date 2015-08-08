@@ -1,14 +1,9 @@
 User
-    ident Text
-    password Text Maybe
-    UniqueUser ident
-    deriving Typeable
-Email
     email Text
-    user UserId Maybe
-    verkey Text Maybe
-    UniqueEmail email
-
+    UniqueUser email
+    name Text
+    admin Bool
+    deriving Typeable
 BlogPost
     title Text
     text Html
