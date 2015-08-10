@@ -9,6 +9,7 @@ getBlogPostR :: BlogPostId -> Handler Html
 getBlogPostR bPostId = do
                          bPost <- runDB $ get404 bPostId
                          comments <- runDB $ selectList [CommentBlogpost ==. bPostId] [Desc CommentDate]
+                         author <- runDB $ selectFirst [UserId ==. blogPostAuthor bPost] []
                          (commentWidget, theEnctype) <- generateFormPost (commentForm bPostId)
                          maid <- maybeAuthId
                          defaultLayout $ [whamlet|
@@ -32,7 +33,10 @@ getBlogPostR bPostId = do
                                  <form method=get action=@{SettingsR}>
                                    <button>Settings
                            <h1>#{blogPostTitle bPost}
-                           posted: #{show $ blogPostDate bPost}
+                           $maybe Entity _ (User _ name _) <- author
+                             posted: #{show $ blogPostDate bPost} by #{name}
+                           $nothing
+                             posted: #{show $ blogPostDate bPost}
                            <article class=fullpost>
                              #{blogPostText bPost}
                            <h2>Comments
@@ -76,7 +80,7 @@ postBlogPostR bPostId = do
                             |]
 
 commentForm :: BlogPostId -> Form Comment
-commentForm postId= renderDivs $ Comment
+commentForm postId = renderDivs $ Comment
     <$> pure postId
     <*> areq textField "Author: " (Just "FlotteBiene42")
     <*> areq textField "Title: " Nothing

@@ -5,6 +5,7 @@ User
     admin Bool
     deriving Typeable
 BlogPost
+    author UserId
     title Text
     text Html
     deriving

@@ -57,7 +57,7 @@ getBlogR site = do
                       No Posts! :(
                     $else
                       <h2>Posts #{firstPost} - #{lastPost}
-                      $forall Entity postId (BlogPost title text date) <- posts
+                      $forall Entity postId (BlogPost author title text date) <- posts
                         <article class=post>
                           <header>
                             <h3><a href=@{BlogPostR postId}>#{title}</a>
@@ -105,8 +105,8 @@ postBlogR site = do
                    case res of
                      FormSuccess s -> do
                        posts <- runDB $ selectList [] [Desc BlogPostDate]
-                       let hitTitle = [ x | x <- posts, (Entity _ (BlogPost y _ _)) <- [x], isInfixOf s y]
-                       let hitText = [ x | x <- posts, (Entity _ (BlogPost _ y _)) <- [x], isInfixOf s (pack $ renderHtml y)]
+                       let hitTitle = [ x | x <- posts, (Entity _ (BlogPost _ y _ _)) <- [x], isInfixOf s y]
+                       let hitText = [ x | x <- posts, (Entity _ (BlogPost _ _ y _)) <- [x], isInfixOf s (pack $ renderHtml y)]
 
                        maid <- maybeAuthId
                        defaultLayout $ [whamlet|
@@ -134,7 +134,7 @@ postBlogR site = do
                          $if null hitTitle
                            No results in titles.
                          $else
-                           $forall Entity postId (BlogPost title text date) <- hitTitle
+                           $forall Entity postId (BlogPost author title text date) <- hitTitle
                              <article class=post>
                                <header>
                                  <h3><a href=@{BlogPostR postId}>#{title}</a>
@@ -145,7 +145,7 @@ postBlogR site = do
                          $if null hitText
                            No results in texts.
                          $else
-                           $forall Entity postId (BlogPost title text date) <- hitText
+                           $forall Entity postId (BlogPost author title text date) <- hitText
                              <article class=post>
                                <header>
                                  <h3><a href=@{BlogPostR postId}>#{title}</a>
