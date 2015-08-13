@@ -34,9 +34,9 @@ getBlogPostR bPostId = do
                                    <button>Settings
                            <h1>#{blogPostTitle bPost}
                            $maybe Entity _ (User _ name _) <- author
-                             posted: #{show $ blogPostDate bPost} by #{name}
+                             posted: #{formatTime defaultTimeLocale "%c" $ blogPostDate bPost} by #{name}
                            $nothing
-                             posted: #{show $ blogPostDate bPost}
+                             posted: #{formatTime defaultTimeLocale "%c" $ blogPostDate bPost}
                            <article class=fullpost>
                              #{blogPostText bPost}
                            <h2>Comments
@@ -56,7 +56,7 @@ getBlogPostR bPostId = do
                                    <h3>#{title}
                                  #{text}
                                  <footer>
-                                   commented: #{show date} by #{author}
+                                   commented: #{formatTime defaultTimeLocale "%c" date} by #{author}
 
                            <hr>
                          |]

@@ -63,7 +63,7 @@ getBlogR site = do
                             <h3><a href=@{BlogPostR postId}>#{title}</a>
                           #{text}
                           <footer>
-                            posted #{show date}
+                            posted: #{formatTime defaultTimeLocale "%c" date}
                     <hr>
                     <table>
                       <tr>
@@ -94,7 +94,7 @@ getBlogR site = do
                             <h3><a href=@{BlogPostR bPost}>#{title}</a>
                           #{text}
                           <footer>
-                            commented: #{show date} by #{author}
+                            commented: #{formatTime defaultTimeLocale "%c" date} by #{author}
                           
                     <hr>
                   |]
