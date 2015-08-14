@@ -12,3 +12,6 @@
 /addAdmin AddAdminR GET POST
 /blog/editUser/#UserId UserEditR GET POST
 /blog/deleteUser/#UserId UserDeleteR GET POST
+/blog/deletePost/#BlogPostId BlogPostDeleteR GET POST
+/blog/deleteComment/#CommentId CommentDeleteR GET POST
+/blog/editPost/#BlogPostId BlogPostEditR GET POST

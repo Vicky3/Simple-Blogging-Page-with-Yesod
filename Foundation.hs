@@ -85,6 +85,21 @@ instance Yesod App where
         case mauth of
             Nothing -> return AuthenticationRequired
             Just _  -> return Authorized
+    isAuthorized (BlogPostDeleteR _) _ = do
+        mauth <- maybeAuth
+        case mauth of
+            Nothing -> return AuthenticationRequired
+            Just _  -> return Authorized
+    isAuthorized (BlogPostEditR _) _ = do
+        mauth <- maybeAuth
+        case mauth of
+            Nothing -> return AuthenticationRequired
+            Just _  -> return Authorized
+    isAuthorized (CommentDeleteR _) _ = do
+        mauth <- maybeAuth
+        case mauth of
+            Nothing -> return AuthenticationRequired
+            Just _  -> return Authorized
     isAuthorized (SettingsR) _ = do
         mauth <- maybeAuth
         case mauth of

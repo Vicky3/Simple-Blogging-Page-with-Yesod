@@ -63,6 +63,9 @@ getBlogR site = do
                             <h3><a href=@{BlogPostR postId}>#{title}</a>
                           #{text}
                           <footer>
+                            $maybe _ <- maid
+                              <a href=@{BlogPostEditR postId}><img alt="Edit" src=@{StaticR edit_png}></a>
+                              <a href=@{BlogPostDeleteR postId}><img alt="Delete" src=@{StaticR delete_png}></a>
                             posted: #{formatTime defaultTimeLocale "%c" date}
                     <hr>
                     <table>

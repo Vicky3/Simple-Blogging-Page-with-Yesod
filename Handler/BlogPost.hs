@@ -37,6 +37,9 @@ getBlogPostR bPostId = do
                              posted: #{formatTime defaultTimeLocale "%c" $ blogPostDate bPost} by #{name}
                            $nothing
                              posted: #{formatTime defaultTimeLocale "%c" $ blogPostDate bPost}
+                           $maybe _ <- maid
+                             <a href=@{BlogPostEditR bPostId}><img alt="Edit" src=@{StaticR edit_png}></a>
+                             <a href=@{BlogPostDeleteR bPostId}><img alt="Delete" src=@{StaticR delete_png}></a>
                            <article class=fullpost>
                              #{blogPostText bPost}
                            <h2>Comments
@@ -50,12 +53,14 @@ getBlogPostR bPostId = do
                            $if null comments
                              No comments added yet.
                            $else
-                             $forall Entity _ (Comment _ author title text date) <- comments
+                             $forall Entity cid (Comment _ author title text date) <- comments
                                <article class=comment>
                                  <header>
                                    <h3>#{title}
                                  #{text}
                                  <footer>
+                                   $maybe _ <- maid
+                                     <a href=@{CommentDeleteR cid}><img alt="Delete" src=@{StaticR delete_png}></a>
                                    commented: #{formatTime defaultTimeLocale "%c" date} by #{author}
 
                            <hr>
