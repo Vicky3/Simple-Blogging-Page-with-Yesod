@@ -93,6 +93,7 @@ library
                  , vector
                  , time
                  , blaze-html
+                 , esqueleto
 
 executable         vicky3-Projekt
     if flag(library-only)

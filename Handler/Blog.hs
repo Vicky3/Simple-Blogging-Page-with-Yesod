@@ -2,6 +2,9 @@ module Handler.Blog where
 
 import Import
 
+import qualified Database.Esqueleto      as E
+import           Database.Esqueleto      ((^.))
+
 import Text.Blaze.Html.Renderer.String (renderHtml)
 
 getBlogR :: Int -> Handler Html
@@ -27,6 +30,23 @@ getBlogR site = do
                   let firstPost = postsPerSite*(site-1)+1
                   let lastPost = firstPost+length(posts)-1
 
+                  --tags <- runDB $ rawSql
+                  --  "SELECT ?? FROM tag ORDER BY COUNT(*) DESC GROUP BY tag.title"
+                  --  []
+
+                  --tags <- runDB
+                  --      $ E.select
+                  --      $ E.from $ \tag -> do
+                  --          groupBy $ tag ^. TagTitle
+                  --          let countRows' = E.countRows
+                  --          E.orderBy [E.desc countRows']
+                  --          return (tag ^. TagTitle, countRows')
+
+                  tags <- runDB $ E.select $ E.from $ \tag -> do
+                            groupBy $ tag E.^. TagTitle
+                            return (tag E.^. TagTitle, E.countRows)
+                        
+
                   maid <- maybeAuthId
                   (searchWidget, theEnctype) <- generateFormPost searchForm
 
@@ -47,6 +67,11 @@ getBlogR site = do
                         <td>
                           <form method=get action=@{SettingsR}>
                             <button>Settings
+                    <hr>
+                    <h3>Tag Cloud
+                    <ul>
+                       $forall (E.Value tagTitle, E.Value count) <- tags
+                         <li>#{tagTitle}
                     <hr>
                     <form method=post enctype=#{theEnctype}>
                       ^{searchWidget}
