@@ -13,6 +13,7 @@ BlogPost
 Tag
     blogpost BlogPostId
     title Text
+    Combination blogpost title
 Comment
     blogpost BlogPostId
     author Text

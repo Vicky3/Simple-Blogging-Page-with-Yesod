@@ -15,3 +15,4 @@
 /blog/deletePost/#BlogPostId BlogPostDeleteR GET POST
 /blog/deleteComment/#CommentId CommentDeleteR GET POST
 /blog/editPost/#BlogPostId BlogPostEditR GET POST
+/blog/addTag/#BlogPostId AddTagR GET POST

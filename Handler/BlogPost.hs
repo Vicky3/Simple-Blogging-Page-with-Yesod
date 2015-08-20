@@ -9,6 +9,7 @@ getBlogPostR :: BlogPostId -> Handler Html
 getBlogPostR bPostId = do
                          bPost <- runDB $ get404 bPostId
                          comments <- runDB $ selectList [CommentBlogpost ==. bPostId] [Desc CommentDate]
+                         tags <- runDB $ selectList [TagBlogpost ==. bPostId] []
                          author <- runDB $ selectFirst [UserId ==. blogPostAuthor bPost] []
                          (commentWidget, theEnctype) <- generateFormPost (commentForm bPostId)
                          maid <- maybeAuthId
@@ -37,7 +38,17 @@ getBlogPostR bPostId = do
                              posted: #{formatTime defaultTimeLocale "%c" $ blogPostDate bPost} by #{name}
                            $nothing
                              posted: #{formatTime defaultTimeLocale "%c" $ blogPostDate bPost}
+                           <br>
+                           $if null tags
+                             No tags yet.
+                           $else
+                             Tags:
+                             <ul>
+                               $forall Entity _ (Tag _ title) <- tags
+                                 <li> #{title}
                            $maybe _ <- maid
+                             <form method=get action=@{AddTagR bPostId}>
+                               <button>Add new tag
                              <a href=@{BlogPostEditR bPostId}><img alt="Edit" src=@{StaticR edit_png}></a>
                              <a href=@{BlogPostDeleteR bPostId}><img alt="Delete" src=@{StaticR delete_png}></a>
                            <article class=fullpost>

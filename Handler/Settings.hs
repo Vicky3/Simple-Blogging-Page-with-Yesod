@@ -50,8 +50,12 @@ postSettingsR = do
                   ((res,_),_) <- runFormPost userForm
                   case res of
                     FormSuccess user -> do
-                      _ <- runDB $ insert user
-                      setMessage $ toHtml $ (userName user) <> " successfully created"
+                      checked <- runDB $ checkUnique user
+                      case checked of
+                        Just _ -> setMessage $ "Email address is already in use!"
+                        Nothing -> do 
+                          _ <- runDB $ insert user
+                          setMessage $ toHtml $ (userName user) <> " successfully created."
                       redirect $ SettingsR
                     _ -> defaultLayout $ [whamlet|
                     <h1>Sorry, something went wrong!
