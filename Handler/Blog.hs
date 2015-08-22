@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Handler.Blog where
 
 import Import
@@ -34,22 +35,26 @@ getBlogR site = do
                   --  "SELECT ?? FROM tag ORDER BY COUNT(*) DESC GROUP BY tag.title"
                   --  []
 
-                  --tags <- runDB
-                  --      $ E.select
-                  --      $ E.from $ \tag -> do
-                  --          groupBy $ tag ^. TagTitle
-                  --          let countRows' = E.countRows
-                  --          E.orderBy [E.desc countRows']
-                  --          return (tag ^. TagTitle, countRows')
+                  (tags :: [(E.Value Text, E.Value Int)]) <- runDB
+                        $ E.select
+                        $ E.from $ \tag -> do
+                            E.groupBy $ tag ^. TagTitle
+                            let countRows' = E.countRows
+                            E.orderBy [E.desc countRows']
+                            return (tag ^. TagTitle, countRows')
 
-                  tags <- runDB $ E.select $ E.from $ \tag -> do
-                            groupBy $ tag E.^. TagTitle
-                            return (tag E.^. TagTitle, E.countRows)
-                        
+                  --(tags :: [(E.Value Text, E.Value Int64)]) <- runDB $ E.select $ E.from $ \tag -> do
+                  --          E.groupBy $ tag E.^. TagTitle
+                  --          return (tag E.^. TagTitle, E.countRows)
+                     
+--                    <h3>Tag Cloud
+--                    <ul>
+--                       $forall (E.Value tagTitle, E.Value count) <- tags
+--                         <li>#{tagTitle}   
 
                   maid <- maybeAuthId
                   (searchWidget, theEnctype) <- generateFormPost searchForm
-
+                  
                   defaultLayout $ [whamlet|
                     <h1>Welcome to a FANTASTIC Blog
                     <table>
@@ -71,7 +76,7 @@ getBlogR site = do
                     <h3>Tag Cloud
                     <ul>
                        $forall (E.Value tagTitle, E.Value count) <- tags
-                         <li>#{tagTitle}
+                         <li>#{tagTitle}: #{count}
                     <hr>
                     <form method=post enctype=#{theEnctype}>
                       ^{searchWidget}
