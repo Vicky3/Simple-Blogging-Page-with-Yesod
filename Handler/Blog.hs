@@ -11,6 +11,7 @@ import Text.Blaze.Html.Renderer.String (renderHtml)
 getBlogR :: Int -> Handler Html
 getBlogR site = do
                   let postsPerSite = 3
+                  let maxTagCloud = 10
 
                   when (site < 1) $ do
                                       setMessage $ toHtml $ (show site) <> " is no valid site."
@@ -24,6 +25,11 @@ getBlogR site = do
                                                               setMessage $ toHtml $ (show site) <> " is no valid site."
                                                               redirect $ BlogR numPages
 
+                  name <- runDB $ selectFirst [] [Asc BlogNameId]
+                  let blogName = case name of
+                                   Nothing -> "a FANTASTIC blog (blog name not yet chosen)"
+                                   Just (Entity _ (BlogName n)) -> n
+
                   let previousPage = site-1
                   let nextPage = site+1
                   posts <- runDB $ selectList [] [Desc BlogPostDate, LimitTo postsPerSite, OffsetBy (postsPerSite*(site-1))]
@@ -31,32 +37,29 @@ getBlogR site = do
                   let firstPost = postsPerSite*(site-1)+1
                   let lastPost = firstPost+length(posts)-1
 
-                  --tags <- runDB $ rawSql
-                  --  "SELECT ?? FROM tag ORDER BY COUNT(*) DESC GROUP BY tag.title"
-                  --  []
-
                   (tags :: [(E.Value Text, E.Value Int)]) <- runDB
                         $ E.select
                         $ E.from $ \tag -> do
                             E.groupBy $ tag ^. TagTitle
-                            let countRows' = E.countRows
+                            let (countRows' :: E.SqlExpr (E.Value Int)) = E.countRows
                             E.orderBy [E.desc countRows']
+                            E.limit maxTagCloud
                             return (tag ^. TagTitle, countRows')
-
-                  --(tags :: [(E.Value Text, E.Value Int64)]) <- runDB $ E.select $ E.from $ \tag -> do
-                  --          E.groupBy $ tag E.^. TagTitle
-                  --          return (tag E.^. TagTitle, E.countRows)
-                     
---                    <h3>Tag Cloud
---                    <ul>
---                       $forall (E.Value tagTitle, E.Value count) <- tags
---                         <li>#{tagTitle}   
 
                   maid <- maybeAuthId
                   (searchWidget, theEnctype) <- generateFormPost searchForm
                   
                   defaultLayout $ [whamlet|
-                    <h1>Welcome to a FANTASTIC Blog
+                    <aside>
+                      <h3>Tag Cloud
+                      <ul>
+                         $forall (E.Value tagTitle, E.Value count) <- tags
+                           <li><font size="#{count}"><a href=@{TagR tagTitle 1}> #{tagTitle}: #{count}</a></font>
+                      <hr>
+                      <form method=post enctype=#{theEnctype}>
+                        ^{searchWidget}
+                        <button>Search!
+                    <h1>Welcome to #{blogName}
                     <table>
                       <tr>
                         <td>
@@ -72,15 +75,6 @@ getBlogR site = do
                         <td>
                           <form method=get action=@{SettingsR}>
                             <button>Settings
-                    <hr>
-                    <h3>Tag Cloud
-                    <ul>
-                       $forall (E.Value tagTitle, E.Value count) <- tags
-                         <li>#{tagTitle}: #{count}
-                    <hr>
-                    <form method=post enctype=#{theEnctype}>
-                      ^{searchWidget}
-                      <button>Search!
                     <hr>
                     $if null posts
                       <h2>Posts

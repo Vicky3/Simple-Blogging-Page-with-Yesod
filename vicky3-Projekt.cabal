@@ -33,6 +33,8 @@ library
                      Handler.CommentDelete
                      Handler.BlogPostEdit
                      Handler.AddTag
+                     Handler.Tag
+                     Handler.Name
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

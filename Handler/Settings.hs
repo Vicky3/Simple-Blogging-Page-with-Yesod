@@ -19,6 +19,9 @@ getSettingsR = do
                        <td>
                          <form method=get action=@{AddPostR}>
                            <button>New Post
+                   <h2>Edit blog name
+                   <form method=get action=@{NameR}>
+                     <button>Change blog name!
                    <h2>Edit users
                    <table>
                      <tr>

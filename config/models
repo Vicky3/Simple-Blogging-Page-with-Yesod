@@ -1,3 +1,5 @@
+BlogName
+    name Text
 User
     email Text
     UniqueUser email

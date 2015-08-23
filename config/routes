@@ -16,3 +16,5 @@
 /blog/deleteComment/#CommentId CommentDeleteR GET POST
 /blog/editPost/#BlogPostId BlogPostEditR GET POST
 /blog/addTag/#BlogPostId AddTagR GET POST
+/blog/tag/#Text/#Int TagR GET
+/blog/changeName NameR GET POST
