@@ -28,14 +28,13 @@ postNameR = do
                   _ <- case old of
                     Nothing -> do 
                                  _ <- runDB $ insert name
-                                 setMessage $ "Name successfully changed."
+                                 setMessage $ "Name successfully set."
                                  redirect $ SettingsR
                     Just (Entity a (BlogName _)) -> do 
-                                                       _ <- runDB $ replace a name
-                                                       setMessage $ "Name successfully changed."
-                                                       redirect $ SettingsR
-                  -- _ <- runDB $ replace id name
-                  setMessage $ "Name successfully changed."
+                                                      _ <- runDB $ replace a name
+                                                      setMessage $ "Name successfully changed."
+                                                      redirect $ SettingsR
+                  setMessage $ "This should not happen!!!"
                   redirect $ SettingsR
                 _ -> defaultLayout $ [whamlet|
                 <h1>Sorry, something went wrong!
@@ -48,4 +47,4 @@ postNameR = do
                 |]
 
 nameForm :: Form BlogName
-nameForm = renderDivs $ BlogName <$> areq textField "Newn ame: " Nothing
+nameForm = renderDivs $ BlogName <$> areq textField "New name: " Nothing

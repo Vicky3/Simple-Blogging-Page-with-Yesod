@@ -121,13 +121,13 @@ getBlogR site = do
                             <h3><a href=@{BlogPostR bPost}>#{title}</a>
                           #{text}
                           <footer>
-                            commented: #{formatTime defaultTimeLocale "%c" date} by #{author}
+                            commented: #{formatTime defaultTimeLocale "%c" date}
                           
                     <hr>
                   |]
 
 postBlogR :: Int -> Handler Html
-postBlogR site = do
+postBlogR _ = do
                    ((res,_),_) <- runFormPost searchForm
                    case res of
                      FormSuccess s -> do
