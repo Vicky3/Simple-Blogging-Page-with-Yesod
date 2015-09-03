@@ -7,93 +7,39 @@ instance YesodNic App
 
 getBlogPostR :: BlogPostId -> Handler Html
 getBlogPostR bPostId = do
+                         -- get post, comments and tags from DB
                          bPost <- runDB $ get404 bPostId
                          comments <- runDB $ selectList [CommentBlogpost ==. bPostId] [Desc CommentDate]
                          tags <- runDB $ selectList [TagBlogpost ==. bPostId] []
                          author <- runDB $ selectFirst [UserId ==. blogPostAuthor bPost] []
-                         (commentWidget, theEnctype) <- generateFormPost (commentForm bPostId)
-                         maid <- maybeAuthId
-                         defaultLayout $ [whamlet|
-                           <h2>Post No. #{toPathPiece bPostId}
-                           <table>
-                             <tr>
-                               <td>
-                                 $maybe _ <- maid
-                                   <form method=get action=@{AuthR LogoutR}>
-                                     <button>Logout
-                                 $nothing
-                                   <form method=get action=@{AuthR LoginR}>
-                                     <button>Login
-                               <td>
-                                 <form method=get action=@{BlogR 1}>
-                                   <button>Home
-                               <td>
-                                 <form method=get action=@{AddPostR}>
-                                   <button>New Post
-                               <td>
-                                 <form method=get action=@{SettingsR}>
-                                   <button>Settings
-                           <h1>#{blogPostTitle bPost}
-                           $maybe Entity _ (User _ name _) <- author
-                             posted: #{formatTime defaultTimeLocale "%c" $ blogPostDate bPost} by #{name}
-                           $nothing
-                             posted: #{formatTime defaultTimeLocale "%c" $ blogPostDate bPost}
-                           <br>
-                           $if null tags
-                             No tags yet.
-                           $else
-                             Tags:
-                             <ul>
-                               $forall Entity _ (Tag _ title) <- tags
-                                 <li> #{title}
-                           $maybe _ <- maid
-                             <form method=get action=@{AddTagR bPostId}>
-                               <button>Add new tag
-                             <a href=@{BlogPostEditR bPostId}><img alt="Edit" src=@{StaticR edit_png}></a>
-                             <a href=@{BlogPostDeleteR bPostId}><img alt="Delete" src=@{StaticR delete_png}></a>
-                           <article class=fullpost>
-                             #{blogPostText bPost}
-                           <h2>Comments
-                           <article class=comment>
-                             <form method=post enctype=#{theEnctype}>
-                               <h3>Add new comment:
-                               <noscript>
-                                 <b>To get a nice editor, please enable JavaScript!
-                               ^{commentWidget}
-                               <button>Submit!
-                           $if null comments
-                             No comments added yet.
-                           $else
-                             $forall Entity cid (Comment _ author title text date) <- comments
-                               <article class=comment>
-                                 <header>
-                                   <h3>#{title}
-                                 #{text}
-                                 <footer>
-                                   $maybe _ <- maid
-                                     <a href=@{CommentDeleteR cid}><img alt="Delete" src=@{StaticR delete_png}></a>
-                                   commented: #{formatTime defaultTimeLocale "%c" date} by #{author}
 
-                           <hr>
-                         |]
+                         -- widget to add comment
+                         (commentWidget, theEnctype) <- generateFormPost (commentForm bPostId)
+
+                         -- flags for the menu
+                         maid <- maybeAuthId -- if you're logged in
+                         let showHome     = True
+                         let showNewPost  = True
+                         let showSettings = True
+
+                         -- the output
+                         defaultLayout $ do
+                           [whamlet| <h2>Post No. #{toPathPiece bPostId} |]
+                           $(widgetFile "menuBar")
+                           $(widgetFile "showPostWithComments")
 
 postBlogPostR :: BlogPostId -> Handler Html
 postBlogPostR bPostId = do
                           ((res,_),_) <- runFormPost (commentForm bPostId)
                           case res of
                             FormSuccess comment -> do
+                              -- insert comment in DB and return to Post
                               _ <- runDB $ insert comment
                               setMessage $ toHtml $ (commentTitle comment) <> " successfully created"
                               redirect $ BlogPostR bPostId
-                            _ -> defaultLayout $ [whamlet|
-                            <h1>Sorry, something went wrong!
-                            <table>
-                               <tr>
-                                 <td>
-                                   <form method=get><button>Try again
-                                 <td>
-                                   <form method=get action=@{BlogR 1}><button>Return to main page
-                            |]
+
+                            -- cases FormMissing and FormFailure
+                            _ -> defaultLayout $(widgetFile "failure")
 
 commentForm :: BlogPostId -> Form Comment
 commentForm postId = renderDivs $ Comment

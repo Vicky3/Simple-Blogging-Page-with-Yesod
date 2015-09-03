@@ -1,0 +1,18 @@
+<table>
+  <tr>
+    $if (site /= 1)
+      <td>
+        <form method=get action=@{BlogR 1}>
+          <button>First
+      <td>
+        <form method=get action=@{BlogR previousPage}>
+          <button>Previous
+    <td>
+      Page #{site} of #{numPages}
+    $if (site /= numPages)
+       <td>
+         <form method=get action=@{BlogR nextPage}>
+           <button>Next
+       <td>
+         <form method=get action=@{BlogR numPages}>
+           <button>Last

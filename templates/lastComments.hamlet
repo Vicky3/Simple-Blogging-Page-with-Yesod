@@ -1,0 +1,11 @@
+<h2>Last Comments
+$if null comments
+  No Comments! :(
+$else
+  $forall Entity _ (Comment bPost author title text date) <- comments
+    <article class=comment>
+      <header>
+        <h3><a href=@{BlogPostR bPost}>#{title}</a>
+      #{text}
+      <footer>
+        commented: #{formatTime defaultTimeLocale "%c" date} by #{author}

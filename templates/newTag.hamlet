@@ -1,0 +1,10 @@
+Tags of this Post: #
+$if null tags
+  No tags yet.
+$else
+  <ul>
+    $forall Entity _ (Tag _ title) <- tags
+      <li> #{title}
+<form method=post enctype=#{theEnctype}>
+  ^{tagWidget}
+  <button>Submit!

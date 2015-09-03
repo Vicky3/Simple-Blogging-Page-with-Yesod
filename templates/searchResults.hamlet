@@ -1,0 +1,22 @@
+<h1>Hits in Post Titles:
+$if null hitTitle
+  No results in titles.
+$else
+  $forall Entity postId (BlogPost _ title text date) <- hitTitle
+    <article class=post>
+      <header>
+        <h3><a href=@{BlogPostR postId}>#{title}</a>
+      #{text}
+      <footer>
+        posted #{show date}
+<h1>Hits in Post Texts:
+$if null hitText
+  No results in texts.
+$else
+  $forall Entity postId (BlogPost _ title text date) <- hitText
+    <article class=post>
+      <header>
+        <h3><a href=@{BlogPostR postId}>#{title}</a>
+      #{text}
+      <footer>
+        posted #{show date}

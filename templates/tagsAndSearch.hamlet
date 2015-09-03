@@ -1,0 +1,9 @@
+<aside>
+  <h3>Tag Cloud
+  <ul>
+    $forall (E.Value tagTitle, E.Value count) <- tags
+      <li><font size="#{count}"><a href=@{TagR tagTitle 1}> #{tagTitle}: #{count}</a></font>
+  <hr>
+    <form method=post enctype=#{theEnctype}>
+      ^{searchWidget}
+      <button>Search!

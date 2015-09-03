@@ -6,40 +6,45 @@ import Import
 import qualified Database.Esqueleto      as E
 import           Database.Esqueleto      ((^.))
 
+import Text.Blaze.Html.Renderer.String (renderHtml)
+
 getTagR :: Text -> Int -> Handler Html
 getTagR tagtitle site = do
+                  -- ===Settings===
                   let postsPerSite = 3
                   let maxTagCloud = 10
+                  -- ==============
 
+                  -- check if site number is valid
                   when (site < 1) $ do
                                       setMessage $ toHtml $ (show site) <> " is no valid site."
                                       redirect $ TagR tagtitle 1
-                  --allPosts <- runDB $ selectList [] [Desc BlogPostDate]
+
+                  -- get number of all posts with this tag
                   allPosts <- runDB
                         $ E.select
                         $ E.from $ \(blogPost `E.InnerJoin` tag) -> do
                             E.on (blogPost ^. BlogPostId E.==. tag ^. TagBlogpost)
                             E.where_ (tag ^. TagTitle E.==. E.val tagtitle)
-                            --E.orderBy [E.desc (blogPost ^. BlogPostDate)]
+                            E.orderBy [E.desc (blogPost ^. BlogPostDate)]
                             return (blogPost)
 
+                  -- calculate how many sites are constructed
                   let numPosts = length(allPosts)
                   let numPages = if (mod numPosts postsPerSite) > 0
                                    then (quot numPosts postsPerSite) + 1
                                    else quot numPosts postsPerSite
+
+                  -- second check if site number is valid
                   when ((site > numPages) && (site /= 1)) $ do
                                                               setMessage $ toHtml $ (show site) <> " is no valid site."
                                                               redirect $ TagR tagtitle numPages
 
-                  name <- runDB $ selectFirst [] [Asc BlogNameId]
-                  let blogName = case name of
-                                   Nothing -> "a FANTASTIC blog (blog name not yet chosen)"
-                                   Just (Entity _ (BlogName n)) -> n
 
-                  let previousPage = site-1
-                  let nextPage = site+1
+
+
+                  -- DB: get posts and tags
                   let offset = fromIntegral $ postsPerSite*(site-1)
-                  --posts <- runDB $ selectList [] [Desc BlogPostDate, LimitTo postsPerSite, OffsetBy (postsPerSite*(site-1))]
                   posts <- runDB
                         $ E.select
                         $ E.from $ \(blogPost `E.InnerJoin` tag) -> do
@@ -49,10 +54,6 @@ getTagR tagtitle site = do
                             E.limit postsPerSite
                             E.offset offset
                             return (blogPost)
-                  comments <- runDB $ selectList [] [Desc CommentDate, LimitTo postsPerSite]
-                  let firstPost = postsPerSite*(site-1)+1
-                  let lastPost = firstPost+length(posts)-1
-
                   (tags :: [(E.Value Text, E.Value Int)]) <- runDB
                         $ E.select
                         $ E.from $ \tag -> do
@@ -62,88 +63,68 @@ getTagR tagtitle site = do
                             E.limit maxTagCloud
                             return (tag ^. TagTitle, countRows')
 
-                  maid <- maybeAuthId
+                  -- for navigation
+                  let previousPage = site-1
+                  let nextPage = site+1
+                  let firstPost = postsPerSite*(site-1)+1
+                  let lastPost = firstPost+length(posts)-1
+
+                  -- for searching
                   (searchWidget, theEnctype) <- generateFormPost searchForm
+
+                  -- flags for the menu
+                  maid <- maybeAuthId -- if you're logged in
+                  let showHome     = True
+                  let showNewPost  = True
+                  let showSettings = True
                   
-                  defaultLayout $ [whamlet|
-                    <aside>
-                      <h3>Tag Cloud
-                      <ul>
-                         $forall (E.Value tagTitle, E.Value count) <- tags
-                           <li><font size="#{count}"><a href=@{TagR tagTitle 1}> #{tagTitle}: #{count}</a></font>
-                      <hr>
-                      <form method=post enctype=#{theEnctype}>
-                        ^{searchWidget}
-                        <button>Search!
-                    <h1>Welcome to #{blogName} - Tag #{tagtitle}
-                    <table>
-                      <tr>
-                        <td>
-                          $maybe _ <- maid
-                            <form method=get action=@{AuthR LogoutR}>
-                              <button>Logout
-                          $nothing
-                            <form method=get action=@{AuthR LoginR}>
-                              <button>Login
-                        <td>
-                          <form method=get action=@{BlogR 1}>
-                            <button>Home
-                        <td>
-                          <form method=get action=@{AddPostR}>
-                            <button>New Post
-                        <td>
-                          <form method=get action=@{SettingsR}>
-                            <button>Settings
-                    <hr>
-                    $if null posts
-                      <h2>Posts
-                      No Posts! :(
-                    $else
-                      <h2>Posts #{firstPost} - #{lastPost}
-                      $forall Entity postId (BlogPost author title text date) <- posts
-                        <article class=post>
-                          <header>
-                            <h3><a href=@{BlogPostR postId}>#{title}</a>
-                          #{text}
-                          <footer>
-                            $maybe _ <- maid
-                              <a href=@{BlogPostEditR postId}><img alt="Edit" src=@{StaticR edit_png}></a>
-                              <a href=@{BlogPostDeleteR postId}><img alt="Delete" src=@{StaticR delete_png}></a>
-                            posted: #{formatTime defaultTimeLocale "%c" date}
-                    <hr>
-                    <table>
-                      <tr>
-                        $if (site /= 1)
-                          <td>
-                            <form method=get action=@{TagR tagtitle 1}>
-                              <button>First
-                          <td>
-                            <form method=get action=@{TagR tagtitle previousPage}>
-                              <button>Previous
-                        <td>
-                          Page #{site} of #{numPages}
-                        $if (site /= numPages)
-                          <td>
-                            <form method=get action=@{TagR tagtitle nextPage}>
-                              <button>Next
-                          <td>
-                            <form method=get action=@{TagR tagtitle numPages}>
-                              <button>Last
-                    <hr>
-                    <h2>Last Comments
-                    $if null comments
-                      No Comments! :(
-                    $else
-                      $forall Entity _ (Comment bPost author title text date) <- comments
-                        <article class=comment>
-                          <header>
-                            <h3><a href=@{BlogPostR bPost}>#{title}</a>
-                          #{text}
-                          <footer>
-                            commented: #{formatTime defaultTimeLocale "%c" date}
-                          
-                    <hr>
-                  |]
+                  -- the output
+                  defaultLayout $ do
+                    $(widgetFile "tagsAndSearch")
+                    [whamlet| <h1>Tag #{tagtitle} |]
+                    $(widgetFile "menuBar")
+                    $(widgetFile "lastPosts")
+                    $(widgetFile "navigation")
+
+postTagR :: Text -> Int -> Handler Html
+postTagR tagtitle _ = do
+                        ((res,_),_) <- runFormPost searchForm
+                        case res of
+                          FormSuccess s -> do
+                            -- get filtered posts from DB (this is more clever than the other search)
+                            hitTitle <- runDB
+                             $ E.select
+                             $ E.from $ \(blogPost `E.InnerJoin` tag) -> do
+                                 E.on (blogPost ^. BlogPostId E.==. tag ^. TagBlogpost)
+                                 E.where_ (tag ^. TagTitle E.==. E.val tagtitle)
+                                 E.where_ (blogPost ^. BlogPostTitle `E.like` (E.%) E.++. E.val s E.++. (E.%))
+                                 E.orderBy [E.desc (blogPost ^. BlogPostDate)]
+                                 return (blogPost)
+                            --this is really ugly... But BlogPostText is Html and not Text and I don't now how to handle a LIKE-Query with Html
+                            posts <- runDB
+                             $ E.select
+                             $ E.from $ \(blogPost `E.InnerJoin` tag) -> do
+                                 E.on (blogPost ^. BlogPostId E.==. tag ^. TagBlogpost)
+                                 E.where_ (tag ^. TagTitle E.==. E.val tagtitle)
+                                 E.orderBy [E.desc (blogPost ^. BlogPostDate)]
+                                 return (blogPost)
+                            let hitText = [ x | x <- posts, (Entity _ (BlogPost _ _ y _)) <- [x], isInfixOf s (pack $ renderHtml y)]
+
+                            -- flags for the menu
+                            maid <- maybeAuthId -- if you're logged in
+                            let showHome     = True
+                            let showNewPost  = True
+                            let showSettings = True
+
+                            -- the output
+                            defaultLayout $ do
+                              [whamlet| <b>Caution: Search may not be that cool... e.g. when there are html tags between words<br>and yes... it's case sensitive |]
+                              [whamlet| <h1>Search Results with Tag #{tagtitle} |]
+                              $(widgetFile "menuBar")
+                              $(widgetFile "searchResults")
+
+                          -- cases FormMissing and FormFailure
+                          _ -> defaultLayout $(widgetFile "failure")
 
 searchForm :: Form Text
 searchForm = renderDivs $ areq textField "Search a word: " Nothing

@@ -4,7 +4,8 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ HomeR GET POST
+/ HomeR GET
+/blog BlogNoSiteR GET
 /blog/site/#Int BlogR GET POST
 /blog/blogpost/#BlogPostId BlogPostR GET POST
 /blog/addpost AddPostR GET POST
@@ -16,5 +17,5 @@
 /blog/deleteComment/#CommentId CommentDeleteR GET POST
 /blog/editPost/#BlogPostId BlogPostEditR GET POST
 /blog/addTag/#BlogPostId AddTagR GET POST
-/blog/tag/#Text/#Int TagR GET
+/blog/tag/#Text/#Int TagR GET POST
 /blog/changeName NameR GET POST

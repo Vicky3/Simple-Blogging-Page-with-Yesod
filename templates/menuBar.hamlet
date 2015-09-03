@@ -1,0 +1,21 @@
+<table>
+  <tr>
+    <td>
+      $maybe _ <- maid
+        <form method=get action=@{AuthR LogoutR}>
+          <button>Logout
+      $nothing
+        <form method=get action=@{AuthR LoginR}>
+          <button>Login
+     $if showHome
+       <td>
+         <form method=get action=@{BlogR 1}>
+           <button>Home
+     $if showNewPost
+       <td>
+         <form method=get action=@{AddPostR}>
+           <button>New Post
+     $if showSettings
+       <td>
+         <form method=get action=@{SettingsR}>
+           <button>Settings

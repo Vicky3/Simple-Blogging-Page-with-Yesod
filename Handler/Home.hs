@@ -12,29 +12,30 @@ import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3,
 -- functions. You can spread them across multiple files if you are so
 -- inclined, or create a single monolithic file.
 getHomeR :: Handler Html
-getHomeR = do
-    (formWidget, formEnctype) <- generateFormPost sampleForm
-    let submission = Nothing :: Maybe (FileInfo, Text)
-        handlerName = "getHomeR" :: Text
-    defaultLayout $ do
-        aDomId <- newIdent
-        setTitle "Welcome To Yesod!"
-        $(widgetFile "homepage")
+getHomeR = redirect $ BlogR 1
+--getHomeR = do
+--    (formWidget, formEnctype) <- generateFormPost sampleForm
+--    let submission = Nothing :: Maybe (FileInfo, Text)
+--        handlerName = "getHomeR" :: Text
+--    defaultLayout $ do
+--        aDomId <- newIdent
+--        setTitle "Welcome To Yesod!"
+--        $(widgetFile "homepage")
 
-postHomeR :: Handler Html
-postHomeR = do
-    ((result, formWidget), formEnctype) <- runFormPost sampleForm
-    let handlerName = "postHomeR" :: Text
-        submission = case result of
-            FormSuccess res -> Just res
-            _ -> Nothing
+--postHomeR :: Handler Html
+--postHomeR = do
+--    ((result, formWidget), formEnctype) <- runFormPost sampleForm
+--    let handlerName = "postHomeR" :: Text
+--        submission = case result of
+--            FormSuccess res -> Just res
+--            _ -> Nothing
 
-    defaultLayout $ do
-        aDomId <- newIdent
-        setTitle "Welcome To Yesod!"
-        $(widgetFile "homepage")
+--    defaultLayout $ do
+--        aDomId <- newIdent
+--        setTitle "Welcome To Yesod!"
+--        $(widgetFile "homepage")
 
-sampleForm :: Form (FileInfo, Text)
-sampleForm = renderBootstrap3 BootstrapBasicForm $ (,)
-    <$> fileAFormReq "Choose a file"
-    <*> areq textField (withSmallInput "What's on the file?") Nothing
+--sampleForm :: Form (FileInfo, Text)
+--sampleForm = renderBootstrap3 BootstrapBasicForm $ (,)
+--    <$> fileAFormReq "Choose a file"
+--    <*> areq textField (withSmallInput "What's on the file?") Nothing

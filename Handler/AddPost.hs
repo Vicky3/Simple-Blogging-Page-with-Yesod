@@ -7,56 +7,57 @@ instance YesodNic App
 
 getAddPostR :: Handler Html
 getAddPostR = do
+                -- find author of new post
                 userId <- maybeAuthId
                 case userId of
+                  -- this should never happen because site can only be accessed when logged in
                   Nothing -> defaultLayout $ [whamlet|
                                <h1>Error
                                Could not find author!
                              |]
+
+                  -- found author
                   Just uId -> do
+
+                    -- widget to get new post
                     (bPostWidget, theEnctype) <- generateFormPost (bPostForm uId)
-                    defaultLayout $ [whamlet|
-                      <h1>Add a new post
-                      <table>
-                          <tr>
-                            <td>
-                              <form method=get action=@{BlogR 1}>
-                                <button>Home
-                            <td>
-                              <form method=get action=@{SettingsR}>
-                                <button>Settings
-                      <form method=post enctype=#{theEnctype}>
-                        <noscript>
-                          <b>To get a nice editor, please enable JavaScript!
-                        ^{bPostWidget}
-                        <button>Submit!
-                      <hr>
-                    |]
+
+                    -- flags for the menu
+                    maid <- maybeAuthId -- if you're logged in
+                    let showHome     = True
+                    let showNewPost  = False
+                    let showSettings = True
+
+                    -- the output
+                    defaultLayout $ do
+                      [whamlet| <h1>Add a new post |]
+                      $(widgetFile "menuBar")
+                      $(widgetFile "newPost")
 
 postAddPostR :: Handler Html
 postAddPostR = do
+                 -- find author of new post
                  userId <- maybeAuthId
                  case userId of
+                   -- this should never happen because site can only be accessed when logged in
                    Nothing -> defaultLayout $ [whamlet|
+                                <h1>Error
                                 Could not find author!
                               |]
+
+                   -- found author
                    Just uId -> do
                      ((res,_),_) <- runFormPost (bPostForm uId)
                      case res of
                        FormSuccess bPost -> do
+                         -- add new post to database
                          bPostId <- runDB $ insert bPost
                          setMessage $ toHtml $ (blogPostTitle bPost) <> " successfully created"
+                         -- redirect to main page
                          redirect $ BlogPostR bPostId
-                       _ -> defaultLayout $ [whamlet|
-                       <h1>Sorry, something went wrong!
-                       <table>
-                          <tr>
-                            <td>
-                              <form method=get><button>Go back
-                            <td>
-                              <form method=get action=@{BlogR 1}><button>Return to main page
-                       |]
-                 
+
+                       -- cases FormMissing and FormFailure
+                       _ -> defaultLayout $(widgetFile "failure")
 
 bPostForm :: UserId -> Form BlogPost
 bPostForm authorId = renderDivs $ BlogPost
