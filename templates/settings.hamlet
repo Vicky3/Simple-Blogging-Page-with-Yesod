@@ -1,0 +1,26 @@
+<h2>Edit blog name
+<form method=get action=@{NameR}>
+ <button>Change blog name!
+<h2>Edit users
+<table>
+  <tr>
+    <th>Id
+    <th>Name
+    <th>Email
+    <th>Admin?
+    <th>
+    <th>
+  $forall Entity userId (User email name admin) <- users
+    <tr>
+      <td>#{toPathPiece userId}
+      <td>#{name}
+      <td>#{email}
+      <td>
+        $if admin
+          Admin
+      <td><a href=@{UserEditR userId}><img alt="Edit" src=@{StaticR edit_png}></a>
+      <td><a href=@{UserDeleteR userId}><img alt="Delete" src=@{StaticR delete_png}></a>
+<h2>Add new user
+<form method=post enctype=#{theEnctype}>
+  ^{userWidget}
+  <button>Submit!

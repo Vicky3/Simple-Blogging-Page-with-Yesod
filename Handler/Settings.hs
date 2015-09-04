@@ -4,71 +4,43 @@ import Import
 
 getSettingsR :: Handler Html
 getSettingsR = do
+                 -- get a list of users from DB
                  users <- runDB $ selectList [] [Asc UserId]
+
+                 -- widget to add new user
                  (userWidget, theEnctype) <- generateFormPost userForm
-                 defaultLayout $ [whamlet|
-                   <h1>Settings
-                   <table>
-                     <tr>
-                       <td>
-                         <form method=get action=@{AuthR LogoutR}>
-                           <button>Logout
-                       <td>
-                         <form method=get action=@{BlogR 1}>
-                           <button>Home
-                       <td>
-                         <form method=get action=@{AddPostR}>
-                           <button>New Post
-                   <h2>Edit blog name
-                   <form method=get action=@{NameR}>
-                     <button>Change blog name!
-                   <h2>Edit users
-                   <table>
-                     <tr>
-                       <th>Id
-                       <th>Name
-                       <th>Email
-                       <th>Admin?
-                       <th>
-                       <th>
-                     $forall Entity userId (User email name admin) <- users
-                       <tr>
-                         <td>#{toPathPiece userId}
-                         <td>#{name}
-                         <td>#{email}
-                         <td>
-                           $if admin
-                             Admin
-                         <td><a href=@{UserEditR userId}>Edit</a>
-                         <td><a href=@{UserDeleteR userId}>Delete</a>
-                   <h2>Add new user
-                   <form method=post enctype=#{theEnctype}>
-                     ^{userWidget}
-                     <button>Submit!
-                   <hr>
-                 |]
+
+                 -- flags for the menu
+                 maid <- maybeAuthId -- if you're logged in
+                 let showHome     = True
+                 let showNewPost  = True
+                 let showSettings = False
+
+                 -- the output
+                 defaultLayout $ do
+                   [whamlet| <h1>Settings |]
+                   $(widgetFile "menuBar")
+                   $(widgetFile "settings")
 
 postSettingsR :: Handler Html
 postSettingsR = do
                   ((res,_),_) <- runFormPost userForm
                   case res of
                     FormSuccess user -> do
+                      -- check uniqueness of email
                       checked <- runDB $ checkUnique user
                       case checked of
+                        -- email is only allowed once
                         Just _ -> setMessage $ "Email address is already in use!"
                         Nothing -> do 
+                          -- insert new user in DB
                           _ <- runDB $ insert user
                           setMessage $ toHtml $ (userName user) <> " successfully created."
+                      -- return to settings
                       redirect $ SettingsR
-                    _ -> defaultLayout $ [whamlet|
-                    <h1>Sorry, something went wrong!
-                    <table>
-                       <tr>
-                         <td>
-                           <form method=get><button>Go back
-                         <td>
-                           <form method=get action=@{BlogR 1}><button>Return to main page
-                    |]
+
+                    -- cases FormMissing and FormFailure
+                    _ -> defaultLayout $(widgetFile "failure")
 
 userForm :: Form User
 userForm = renderDivs $ User

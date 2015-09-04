@@ -4,47 +4,40 @@ import Import
 
 getUserEditR :: UserId -> Handler Html
 getUserEditR userId = do
+                        -- get the user to edit from DB
                         user <- runDB $ get404 userId
+
+                        -- widget to make changes
                         (userWidget, theEnctype) <- generateFormPost (userForm user)
-                        defaultLayout $ [whamlet|
-                          <h1>Edit User
-                          <table>
-                            <tr>
-                              <td>
-                                <form method=get action=@{AuthR LogoutR}>
-                                  <button>Logout
-                              <td>
-                                <form method=get action=@{BlogR 1}>
-                                  <button>Home
-                              <td>
-                                <form method=get action=@{AddPostR}>
-                                  <button>New Post
-                              <td>
-                                <form method=get action=@{SettingsR}>
-                                  <button>Settings
-                          <form method=post enctype=#{theEnctype}>
-                            ^{userWidget}
-                           <button>Submit!
-                        |]
+
+                        -- flags for the menu
+                        maid <- maybeAuthId -- if you're logged in
+                        let showHome     = True
+                        let showNewPost  = True
+                        let showSettings = True
+
+                        -- the output
+                        defaultLayout $ do
+                          [whamlet| <h1>Edit User |]
+                          $(widgetFile "menuBar")
+                          [whamlet|
+                            <form method=post enctype=#{theEnctype}>
+                              ^{userWidget}
+                              <button>Submit!
+                          |]
 
 postUserEditR :: UserId -> Handler Html
 postUserEditR userId = do
                          user <- runDB $ get404 userId
                          ((res,_),_) <- runFormPost (userForm user)
                          case res of
+                           -- save changes into DB and return to settings
                            FormSuccess changedUser -> do
                              _ <- runDB $ replace userId changedUser
                              setMessage $ toHtml $ (userName changedUser) <> " successfully updated"
                              redirect $ SettingsR
-                           _ -> defaultLayout $ [whamlet|
-                           <h1>Sorry, something went wrong!
-                           <table>
-                              <tr>
-                                <td>
-                                  <form method=get><button>Go back
-                                <td>
-                                  <form method=get action=@{BlogR 1}><button>Return to main page
-                           |]
+                           -- cases FormMissing and FormFailure
+                           _ -> defaultLayout $(widgetFile "failure")
 
 userForm :: User -> Form User
 userForm user = renderDivs $ User
